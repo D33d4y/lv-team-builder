@@ -22,7 +22,7 @@ model Player {
   id            String    @id @default(cuid())
   name          String    @unique
   handicap      Float
-  overrideTier  String?   // A, B, C, or D
+  overrideTier  String?
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @updatedAt
   attendances   Attendance[]
@@ -63,15 +63,3 @@ model AppSettings {
   lastCleared   DateTime?
   updatedAt     DateTime  @updatedAt
 }
-/** @type {import('next').NextConfig} */
-const nextConfig = {
-  eslint: {
-    ignoreDuringBuilds: true,
-  },
-  typescript: {
-    ignoreBuildErrors: false,
-  },
-  images: { unoptimized: true },
-};
-
-module.exports = nextConfig;
