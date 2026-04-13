@@ -213,7 +213,7 @@ export function CheckinContent() {
         <div className="flex items-center justify-between mb-4">
           <div>
             <h1 className="text-2xl md:text-3xl font-bold text-white">Player Check-in</h1>
-            <p className="text-white/70">Tap a player to check them in or out</p>
+            <p className="text-white/70">Tap to check in · Hold to remove</p>
           </div>
           <motion.button
             whileHover={{ scale: 1.05 }}
