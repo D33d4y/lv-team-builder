@@ -1,0 +1,66 @@
+generator client {
+    provider = "prisma-client-js"
+    binaryTargets = ["native", "linux-musl-arm64-openssl-3.0.x"]
+    output = "/home/ubuntu/lv_team_builder/nextjs_space/node_modules/.prisma/client"
+}
+
+datasource db {
+    provider = "postgresql"
+    url      = env("DATABASE_URL")
+}
+
+model User {
+  id            String    @id @default(cuid())
+  email         String    @unique
+  name          String?
+  password      String
+  isAdmin       Boolean   @default(false)
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+}
+
+model Player {
+  id            String    @id @default(cuid())
+  name          String    @unique
+  handicap      Float
+  overrideTier  String?   // A, B, C, or D
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+  attendances   Attendance[]
+}
+
+model Attendance {
+  id            String    @id @default(cuid())
+  playerId      String
+  sessionDate   DateTime  @db.Date
+  checkedIn     Boolean   @default(true)
+  createdAt     DateTime  @default(now())
+  player        Player    @relation(fields: [playerId], references: [id], onDelete: Cascade)
+
+  @@unique([playerId, sessionDate])
+  @@index([sessionDate])
+  @@index([playerId])
+}
+
+model Session {
+  id            String    @id @default(cuid())
+  sessionDate   DateTime  @db.Date @unique
+  teamsData     Json?
+  createdAt     DateTime  @default(now())
+}
+
+model GuestPlayer {
+  id            String    @id @default(cuid())
+  name          String
+  handicap      Float
+  sessionDate   DateTime  @db.Date
+  createdAt     DateTime  @default(now())
+
+  @@index([sessionDate])
+}
+
+model AppSettings {
+  id            String    @id @default("singleton")
+  lastCleared   DateTime?
+  updatedAt     DateTime  @updatedAt
+}

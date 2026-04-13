@@ -1,0 +1,18 @@
+{
+  "name": "LV Team Builder",
+  "short_name": "LV Teams",
+  "description": "Golf team management with fair team generation and multi-user check-in",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#166534",
+  "theme_color": "#166534",
+  "orientation": "portrait-primary",
+  "icons": [
+    {
+      "src": "/lv-logo.jpg",
+      "sizes": "32x32",
+      "type": "image/jpeg",
+      "purpose": "any maskable"
+    }
+  ]
+}

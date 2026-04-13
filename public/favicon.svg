@@ -1,0 +1,17 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256">
+  <rect width="256" height="256" fill="#ffffff"/>
+  <defs>
+    <pattern id="golfTexture" x="0" y="0" width="20" height="20" patternUnits="userSpaceOnUse">
+      <circle cx="5" cy="5" r="1.5" fill="#1a4d2e" opacity="0.15"/>
+      <circle cx="15" cy="5" r="1.5" fill="#1a4d2e" opacity="0.15"/>
+      <circle cx="10" cy="12" r="1.5" fill="#1a4d2e" opacity="0.15"/>
+      <circle cx="5" cy="15" r="1.5" fill="#1a4d2e" opacity="0.15"/>
+      <circle cx="15" cy="15" r="1.5" fill="#1a4d2e" opacity="0.15"/>
+    </pattern>
+  </defs>
+  <g transform="translate(128, 128)">
+    <path d="M -55 -70 L -55 70 L -30 70 L -30 -20 L 10 -20 L 10 -70 Z" fill="#1a4d2e"/>
+    <path d="M 15 -70 L -5 70 L 22 70 L 42 -70 Z" fill="#d4af37"/>
+    <rect x="-55" y="-70" width="97" height="140" fill="url(#golfTexture)"/>
+  </g>
+</svg>
