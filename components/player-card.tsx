@@ -41,7 +41,8 @@ export function PlayerCard({ player, onToggle, loading, showDelete, onDelete }: 
   }, []);
 
   const startHold = useCallback(() => {
-    if (loading || !player?.isCheckedIn) return;
+    // Long press works for BOTH checking in and removing
+    if (loading) return;
     didLongPress.current = false;
     const startTime = Date.now();
     progressTimer.current = setInterval(() => {
@@ -51,21 +52,24 @@ export function PlayerCard({ player, onToggle, loading, showDelete, onDelete }: 
     holdTimer.current = setTimeout(() => {
       didLongPress.current = true;
       cancelHold();
-      onToggle(player?.id ?? "", false);
+      // Toggle — check in if currently out, remove if currently in
+      onToggle(player?.id ?? "", !player?.isCheckedIn);
     }, LONG_PRESS_MS);
   }, [loading, player, cancelHold, onToggle]);
 
   const handleClick = useCallback(() => {
+    // Swallow the click that fires after a long press
     if (didLongPress.current) { didLongPress.current = false; return; }
-    if (loading) return;
-    if (!player?.isCheckedIn) {
-      onToggle(player?.id ?? "", true);
-    }
-  }, [loading, player, onToggle]);
+    // Single tap does nothing — long press required for both actions
+  }, []);
 
   const RADIUS = 22;
   const CIRCUMFERENCE = 2 * Math.PI * RADIUS;
   const strokeDashoffset = CIRCUMFERENCE - (holdProgress / 100) * CIRCUMFERENCE;
+  // Green ring = checking in, red ring = removing
+  const ringColor = player?.isCheckedIn
+    ? "rgba(239,68,68,0.9)"
+    : "rgba(34,197,94,0.9)";
 
   return (
     <motion.div
@@ -89,7 +93,7 @@ export function PlayerCard({ player, onToggle, loading, showDelete, onDelete }: 
         <div className="flex items-center gap-3">
           {/* Avatar with long-press progress ring */}
           <div className="relative w-10 h-10 flex-shrink-0">
-            {player?.isCheckedIn && holdProgress > 0 && (
+            {holdProgress > 0 && (
               <svg
                 className="absolute inset-0 w-full h-full -rotate-90 pointer-events-none"
                 viewBox="0 0 48 48"
@@ -97,7 +101,7 @@ export function PlayerCard({ player, onToggle, loading, showDelete, onDelete }: 
                 <circle
                   cx="24" cy="24" r={RADIUS}
                   fill="none"
-                  stroke="rgba(239,68,68,0.9)"
+                  stroke={ringColor}
                   strokeWidth="4"
                   strokeDasharray={CIRCUMFERENCE}
                   strokeDashoffset={strokeDashoffset}
@@ -124,11 +128,11 @@ export function PlayerCard({ player, onToggle, loading, showDelete, onDelete }: 
                 </span>
               )}
             </div>
-            {player?.isCheckedIn && (
-              <span className="text-white/40 text-xs">
-                {holdProgress > 0 ? "Keep holding to remove…" : "Hold to remove"}
-              </span>
-            )}
+            <span className="text-white/40 text-xs">
+              {holdProgress > 0
+                ? player?.isCheckedIn ? "Keep holding to remove…" : "Keep holding to check in…"
+                : player?.isCheckedIn ? "Hold to remove" : "Hold to check in"}
+            </span>
           </div>
         </div>
 
