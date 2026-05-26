@@ -58,6 +58,11 @@ export function AdminContent() {
   // Team count selector
   const [selectedTeamCount, setSelectedTeamCount] = useState<number | "auto">("auto");
 
+  // Clear attendance history state
+  const [clearingAttendance, setClearingAttendance] = useState(false);
+  const [showClearAttendanceConfirm, setShowClearAttendanceConfirm] = useState(false);
+  const [attendanceRecordCount, setAttendanceRecordCount] = useState<number | null>(null);
+
   const fetchPlayers = useCallback(async () => {
     try {
       const res = await fetch("/api/players");
@@ -193,6 +198,35 @@ export function AdminContent() {
     }
   };
 
+  const handleClearAttendanceHistory = async () => {
+    try {
+      const res = await fetch("/api/clear-attendance");
+      const data = await res.json();
+      setAttendanceRecordCount(data.recordCount ?? null);
+    } catch {
+      setAttendanceRecordCount(null);
+    }
+    setShowClearAttendanceConfirm(true);
+  };
+
+  const confirmClearAttendanceHistory = async () => {
+    setClearingAttendance(true);
+    setShowClearAttendanceConfirm(false);
+    try {
+      const res = await fetch("/api/clear-attendance", { method: "POST" });
+      const data = await res.json();
+      if (data.success) {
+        setMessage({ type: "success", text: `Cleared ${data.deletedCount} attendance records. All player game counts reset to 0.` });
+        await fetchPlayers();
+      }
+    } catch (error) {
+      console.error("Failed to clear attendance history:", error);
+      setMessage({ type: "error", text: "Failed to clear attendance history" });
+    } finally {
+      setClearingAttendance(false);
+    }
+  };
+
   const handleToggle = async (playerId: string, checkedIn: boolean) => {
     setUpdatingPlayer(playerId);
 
@@ -325,6 +359,39 @@ export function AdminContent() {
 
   return (
     <div className="max-w-[1200px] mx-auto px-4 py-6">
+      {/* Clear Attendance History Confirmation Modal */}
+      {showClearAttendanceConfirm && (
+        <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-xl shadow-2xl p-6 max-w-sm w-full">
+            <h2 className="text-lg font-bold text-gray-900 mb-2">Clear Attendance History?</h2>
+            <p className="text-sm text-gray-600 mb-1">
+              This will permanently delete{" "}
+              {attendanceRecordCount !== null
+                ? <strong>{attendanceRecordCount} attendance records</strong>
+                : "all dated attendance records"}
+              , resetting every player&apos;s game count to 0.
+            </p>
+            <p className="text-sm text-gray-600 mb-4">
+              Current check-in status is <strong>not</strong> affected. This cannot be undone.
+            </p>
+            <div className="flex gap-3 justify-end">
+              <button
+                onClick={() => setShowClearAttendanceConfirm(false)}
+                className="px-4 py-2 text-sm rounded-lg border border-gray-300 hover:bg-gray-50 transition-colors"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={confirmClearAttendanceHistory}
+                className="px-4 py-2 text-sm rounded-lg bg-red-700 hover:bg-red-800 text-white font-medium transition-colors"
+              >
+                Yes, Clear History
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Header */}
       <motion.div
         initial={{ opacity: 0, y: -20 }}
@@ -430,6 +497,19 @@ export function AdminContent() {
                 })}
               </p>
             )}
+            <div className="mt-4 pt-4 border-t border-red-500/20">
+              <p className="text-red-200/80 text-sm mb-3">
+                ⚠️ Resets all player game counts to 0. Use once per year to start fresh. Current check-in status is not affected.
+              </p>
+              <button
+                onClick={handleClearAttendanceHistory}
+                disabled={clearingAttendance}
+                className="flex items-center gap-2 px-4 py-2 bg-red-700 hover:bg-red-800
+                           disabled:opacity-50 text-white rounded-lg text-sm font-medium transition-colors"
+              >
+                {clearingAttendance ? "Clearing…" : "Clear Attendance History"}
+              </button>
+            </div>
           </motion.div>
         )}
       </motion.div>
