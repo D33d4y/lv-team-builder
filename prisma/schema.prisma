@@ -19,13 +19,14 @@ model User {
 }
 
 model Player {
-  id            String    @id @default(cuid())
-  name          String    @unique
-  handicap      Float
-  overrideTier  String?
-  createdAt     DateTime  @default(now())
-  updatedAt     DateTime  @updatedAt
-  attendances   Attendance[]
+  id                String    @id @default(cuid())
+  name              String    @unique
+  handicap          Float
+  overrideTier      String?
+  annualAttendance  Int       @default(0)
+  createdAt         DateTime  @default(now())
+  updatedAt         DateTime  @updatedAt
+  attendances       Attendance[]
 }
 
 model Attendance {

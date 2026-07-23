@@ -3,7 +3,7 @@ export interface PlayerWithAttendance {
   name: string;
   handicap: number;
   overrideTier: string | null;
-  attendanceCount: number;
+  annualAttendance: number;
   isCheckedIn: boolean;
 }
 

@@ -21,16 +21,7 @@ export function PlayerCard({ player, onToggle, loading, showDelete, onDelete }: 
   const progressTimer = useRef<ReturnType<typeof setInterval> | null>(null);
   const didLongPress = useRef(false);
 
-  const attendanceLevel =
-    (player?.attendanceCount ?? 0) >= 7 ? "high"
-    : (player?.attendanceCount ?? 0) >= 4 ? "medium"
-    : "low";
-
-  const attendanceColor = {
-    high: "text-green-300",
-    medium: "text-yellow-500",
-    low: "text-gray-400",
-  }[attendanceLevel];
+  const annualAttendance = player?.annualAttendance ?? 0;
 
   const cancelHold = useCallback(() => {
     if (holdTimer.current) clearTimeout(holdTimer.current);
@@ -138,11 +129,10 @@ export function PlayerCard({ player, onToggle, loading, showDelete, onDelete }: 
 
         <div className="flex items-center gap-3">
           <div className="flex flex-col items-end gap-1">
-            <div className={`flex items-center gap-1 ${attendanceColor}`}>
+            <div className="flex items-center gap-1 text-green-300">
               <TrendingUp className="w-4 h-4" />
-              <span className="text-sm font-medium">{player?.attendanceCount ?? 0}/10</span>
+              <span className="text-sm font-medium">{annualAttendance} Plays</span>
             </div>
-            <span className="text-xs text-white/50">weeks</span>
           </div>
           {showDelete && onDelete && (
             <button
