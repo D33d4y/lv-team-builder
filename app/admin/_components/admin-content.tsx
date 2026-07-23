@@ -44,24 +44,24 @@ export function AdminContent() {
   const [activeTab, setActiveTab] = useState<"checkin" | "teams" | "manage" | "users">("checkin");
   const [deletingPlayer, setDeletingPlayer] = useState<string | null>(null);
   const [showAdvanced, setShowAdvanced] = useState(false);
-  
+
   // User management state
   const [users, setUsers] = useState<AppUser[]>([]);
   const [editingUser, setEditingUser] = useState<string | null>(null);
   const [editForm, setEditForm] = useState({ email: "", name: "", newPassword: "" });
   const [savingUser, setSavingUser] = useState(false);
   const [deletingUser, setDeletingUser] = useState<string | null>(null);
-  
+
   // Last cleared state
   const [lastCleared, setLastCleared] = useState<string | null>(null);
-  
+
   // Team count selector
   const [selectedTeamCount, setSelectedTeamCount] = useState<number | "auto">("auto");
 
-  // Clear attendance history state
-  const [clearingAttendance, setClearingAttendance] = useState(false);
-  const [showClearAttendanceConfirm, setShowClearAttendanceConfirm] = useState(false);
-  const [attendanceRecordCount, setAttendanceRecordCount] = useState<number | null>(null);
+  // Reset annual attendance state
+  const [resettingAttendance, setResettingAttendance] = useState(false);
+  const [showResetAttendanceConfirm, setShowResetAttendanceConfirm] = useState(false);
+  const [annualAttendancePlayerCount, setAnnualAttendancePlayerCount] = useState<number | null>(null);
 
   const fetchPlayers = useCallback(async () => {
     try {
@@ -148,7 +148,7 @@ export function AdminContent() {
 
     try {
       const body = selectedTeamCount !== "auto" ? { numTeams: selectedTeamCount } : undefined;
-      const res = await fetch("/api/generate-teams", { 
+      const res = await fetch("/api/generate-teams", {
         method: "POST",
         headers: body ? { "Content-Type": "application/json" } : undefined,
         body: body ? JSON.stringify(body) : undefined,
@@ -174,7 +174,7 @@ export function AdminContent() {
     if (!confirm("Clear all check-ins and teams for today? This will reset everything for the new week.")) {
       return;
     }
-    
+
     setClearing(true);
     setMessage(null);
 
@@ -198,32 +198,32 @@ export function AdminContent() {
     }
   };
 
-  const handleClearAttendanceHistory = async () => {
+  const handleResetAnnualAttendance = async () => {
     try {
-      const res = await fetch("/api/clear-attendance");
+      const res = await fetch("/api/reset-annual-attendance");
       const data = await res.json();
-      setAttendanceRecordCount(data.recordCount ?? null);
+      setAnnualAttendancePlayerCount(data.playerCount ?? null);
     } catch {
-      setAttendanceRecordCount(null);
+      setAnnualAttendancePlayerCount(null);
     }
-    setShowClearAttendanceConfirm(true);
+    setShowResetAttendanceConfirm(true);
   };
 
-  const confirmClearAttendanceHistory = async () => {
-    setClearingAttendance(true);
-    setShowClearAttendanceConfirm(false);
+  const confirmResetAnnualAttendance = async () => {
+    setResettingAttendance(true);
+    setShowResetAttendanceConfirm(false);
     try {
-      const res = await fetch("/api/clear-attendance", { method: "POST" });
+      const res = await fetch("/api/reset-annual-attendance", { method: "POST" });
       const data = await res.json();
       if (data.success) {
-        setMessage({ type: "success", text: `Cleared ${data.deletedCount} attendance records. All player game counts reset to 0.` });
+        setMessage({ type: "success", text: `Reset ${data.resetCount} player(s) to 0 plays for the new year.` });
         await fetchPlayers();
       }
     } catch (error) {
-      console.error("Failed to clear attendance history:", error);
-      setMessage({ type: "error", text: "Failed to clear attendance history" });
+      console.error("Failed to reset annual attendance:", error);
+      setMessage({ type: "error", text: "Failed to reset annual attendance" });
     } finally {
-      setClearingAttendance(false);
+      setResettingAttendance(false);
     }
   };
 
@@ -256,7 +256,7 @@ export function AdminContent() {
     if (!confirm(`Are you sure you want to permanently delete "${playerName}"? This cannot be undone.`)) {
       return;
     }
-    
+
     setDeletingPlayer(playerId);
     setMessage(null);
 
@@ -359,33 +359,33 @@ export function AdminContent() {
 
   return (
     <div className="max-w-[1200px] mx-auto px-4 py-6">
-      {/* Clear Attendance History Confirmation Modal */}
-      {showClearAttendanceConfirm && (
+      {/* Reset Annual Attendance Confirmation Modal */}
+      {showResetAttendanceConfirm && (
         <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50 p-4">
           <div className="bg-white rounded-xl shadow-2xl p-6 max-w-sm w-full">
-            <h2 className="text-lg font-bold text-gray-900 mb-2">Clear Attendance History?</h2>
+            <h2 className="text-lg font-bold text-gray-900 mb-2">Reset Annual Attendance?</h2>
             <p className="text-sm text-gray-600 mb-1">
-              This will permanently delete{" "}
-              {attendanceRecordCount !== null
-                ? <strong>{attendanceRecordCount} attendance records</strong>
-                : "all dated attendance records"}
-              , resetting every player&apos;s game count to 0.
+              This will reset annual attendance ("XX Plays") back to 0 for{" "}
+              {annualAttendancePlayerCount !== null
+                ? <strong>{annualAttendancePlayerCount} player(s)</strong>
+                : "all players"}
+              {" "}with plays recorded this year.
             </p>
             <p className="text-sm text-gray-600 mb-4">
               Current check-in status is <strong>not</strong> affected. This cannot be undone.
             </p>
             <div className="flex gap-3 justify-end">
               <button
-                onClick={() => setShowClearAttendanceConfirm(false)}
+                onClick={() => setShowResetAttendanceConfirm(false)}
                 className="px-4 py-2 text-sm rounded-lg border border-gray-300 hover:bg-gray-50 transition-colors"
               >
                 Cancel
               </button>
               <button
-                onClick={confirmClearAttendanceHistory}
+                onClick={confirmResetAnnualAttendance}
                 className="px-4 py-2 text-sm rounded-lg bg-red-700 hover:bg-red-800 text-white font-medium transition-colors"
               >
-                Yes, Clear History
+                Yes, Reset Attendance
               </button>
             </div>
           </div>
@@ -468,7 +468,7 @@ export function AdminContent() {
           Advanced Controls
           {showAdvanced ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
         </button>
-        
+
         {showAdvanced && (
           <motion.div
             initial={{ opacity: 0, height: 0 }}
@@ -499,15 +499,15 @@ export function AdminContent() {
             )}
             <div className="mt-4 pt-4 border-t border-red-500/20">
               <p className="text-red-200/80 text-sm mb-3">
-                ⚠️ Resets all player game counts to 0. Use once per year to start fresh. Current check-in status is not affected.
+                ⚠️ Resets every player's annual attendance ("XX Plays") to 0. Do this once per year, after the Village Cup. Current check-in status is not affected.
               </p>
               <button
-                onClick={handleClearAttendanceHistory}
-                disabled={clearingAttendance}
+                onClick={handleResetAnnualAttendance}
+                disabled={resettingAttendance}
                 className="flex items-center gap-2 px-4 py-2 bg-red-700 hover:bg-red-800
                            disabled:opacity-50 text-white rounded-lg text-sm font-medium transition-colors"
               >
-                {clearingAttendance ? "Clearing…" : "Clear Attendance History"}
+                {resettingAttendance ? "Resetting…" : "Reset Annual Attendance"}
               </button>
             </div>
           </motion.div>
@@ -585,7 +585,7 @@ export function AdminContent() {
           )}
         </div>
       )}
-      
+
       {activeTab === "teams" && (
         <div>
           {(teamsData?.teams?.length ?? 0) > 0 ? (
@@ -602,7 +602,7 @@ export function AdminContent() {
           )}
         </div>
       )}
-      
+
       {activeTab === "manage" && (
         <div>
           <div className="mb-4 p-4 rounded-xl bg-amber-500/10 border border-amber-500/20">

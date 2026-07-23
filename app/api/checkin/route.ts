@@ -2,7 +2,7 @@ export const dynamic = "force-dynamic";
 
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
-import { startOfDay, format } from "date-fns";
+import { startOfDay, format, isSaturday } from "date-fns";
 
 export async function POST(req: NextRequest) {
   try {
@@ -20,22 +20,48 @@ export async function POST(req: NextRequest) {
     const todayStr = format(today, "yyyy-MM-dd");
 
     if (checkedIn) {
-      // Create or update attendance record
-      await prisma.attendance.upsert({
+      // Look up whether this player already has an attendance record for
+      // today BEFORE upserting, so we only count the first check-in of the
+      // day toward annual attendance. Toggling check-in on/off again later
+      // the same day will not double-count.
+      const existing = await prisma.attendance.findUnique({
         where: {
           playerId_sessionDate: {
             playerId,
             sessionDate: new Date(todayStr),
           },
         },
-        update: {
-          checkedIn: true,
-        },
-        create: {
-          playerId,
-          sessionDate: new Date(todayStr),
-          checkedIn: true,
-        },
+      });
+
+      const isFirstCheckInToday = !existing;
+
+      await prisma.$transaction(async (tx) => {
+        // Create or update attendance record
+        await tx.attendance.upsert({
+          where: {
+            playerId_sessionDate: {
+              playerId,
+              sessionDate: new Date(todayStr),
+            },
+          },
+          update: {
+            checkedIn: true,
+          },
+          create: {
+            playerId,
+            sessionDate: new Date(todayStr),
+            checkedIn: true,
+          },
+        });
+
+        // Annual attendance ("XX Plays") only increments on Saturdays, and
+        // only once per Saturday per player.
+        if (isFirstCheckInToday && isSaturday(today)) {
+          await tx.player.update({
+            where: { id: playerId },
+            data: { annualAttendance: { increment: 1 } },
+          });
+        }
       });
     } else {
       // Remove check-in
