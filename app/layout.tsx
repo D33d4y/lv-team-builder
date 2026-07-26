@@ -22,9 +22,13 @@ export async function generateMetadata(): Promise<Metadata> {
     description: "Golf team management with fair team generation and multi-user check-in",
     manifest: "/manifest.json",
     icons: {
-      icon: "/favicon.svg",
+      icon: [
+        { url: "/favicon.svg", type: "image/svg+xml" },
+        { url: "/icon-192.png", sizes: "192x192", type: "image/png" },
+        { url: "/icon-512.png", sizes: "512x512", type: "image/png" },
+      ],
       shortcut: "/favicon.svg",
-      apple: "/favicon.svg",
+      apple: "/apple-touch-icon.png",
     },
     openGraph: {
       title: "LV Team Builder",
