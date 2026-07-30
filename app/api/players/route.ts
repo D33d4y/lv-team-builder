@@ -38,13 +38,8 @@ export async function GET(req: NextRequest) {
       isCheckedIn: checkedInIds.has(player?.id ?? ""),
     }));
 
-    // Sort by annual attendance (descending), then by name
-    playersWithAttendance.sort((a, b) => {
-      if ((b?.annualAttendance ?? 0) !== (a?.annualAttendance ?? 0)) {
-        return (b?.annualAttendance ?? 0) - (a?.annualAttendance ?? 0);
-      }
-      return (a?.name ?? "").localeCompare(b?.name ?? "");
-    });
+// Sort alphabetically by name
+playersWithAttendance.sort((a, b) => (a?.name ?? "").localeCompare(b?.name ?? ""));
 
     return NextResponse.json(playersWithAttendance);
   } catch (error) {
